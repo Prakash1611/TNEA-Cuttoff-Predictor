@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TNEA College Predictor & DoTE Choice Optimizer | Tamil Nadu Admissions</title>
+  <meta name="description" content="Official historical cutoff predictor, Machine Learning admission probability engine, TNEA state rank estimator, and DoTE choice list optimizer for Tamil Nadu engineering admissions.">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  
+  <!-- Google Fonts & FontAwesome CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="brand-container">
+      <div class="brand-logo">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <div>
+        <div class="brand-title">TNEA College Predictor</div>
+        <div class="brand-badge">2026 DoTE Admission Intelligence</div>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <button class="nav-btn active" data-tab="predictor">
+        <i class="fas fa-sliders-h"></i> Cutoff & ML Predictor
+      </button>
+      <button class="nav-btn" data-tab="choices">
+        <i class="fas fa-list-ol"></i> DoTE Choice Optimizer
+      </button>
+      <button class="nav-btn" data-tab="ranks">
+        <i class="fas fa-chart-bar"></i> State Rank Matrix
+      </button>
+    </div>
+
+    <button id="pwaInstallBtn" class="btn-secondary" style="display: none;">
+      <i class="fas fa-download"></i> Install App
+    </button>
+  </nav>
+
+  <!-- App Container -->
+  <div class="app-container">
+
+    <!-- Hero Header -->
+    <header class="hero-section">
+      <h1 class="hero-title">Tamil Nadu Engineering Admissions Intelligence</h1>
+      <p class="hero-subtitle">
+        Predict your admission probability across 150+ top TNEA engineering colleges using 2021–2025 DoTE cutoff statistics, supervised Machine Learning probability scoring, and automated choice list strategy builder.
+      </p>
+    </header>
+
+    <!-- TAB 1: PREDICTOR VIEW -->
+    <div id="predictorView" class="tab-view">
+      
+      <!-- Rank Estimation Summary Card -->
+      <div class="rank-card-banner">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.5rem;">
+            <i class="fas fa-award"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary);">Predicted TNEA State Rank Estimation</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Based on Kernel Density Estimation (KDE) across Class 12 board mark distributions</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 2.5rem;">
+          <div class="rank-stat">
+            <span id="overallRankVal" class="rank-stat-val">~3,450</span>
+            <span class="rank-stat-lbl">Estimated Overall Rank</span>
+          </div>
+          <div class="rank-stat">
+            <span id="communityRankVal" class="rank-stat-val">~1,090</span>
+            <span id="commRankLabel" class="rank-stat-lbl">OC Rank</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left Sidebar: Controls & Calculator -->
+        <aside class="glass-panel">
+          <div class="panel-header">
+            <span class="panel-title"><i class="fas fa-calculator" style="color: var(--primary);"></i> Cutoff Score Calculator</span>
+          </div>
+
+          <div class="score-display-card">
+            <div id="cutoffDisplay" class="score-value">191.00</div>
+            <div class="score-label">Aggregated TNEA Cutoff (Out of 200.00)</div>
+          </div>
+
+          <div class="calculator-box">
+            <div class="form-group">
+              <div class="form-label">
+                <span>Mathematics Marks</span>
+                <span style="font-family: var(--font-mono); color: var(--primary);">Max 100</span>
+              </div>
+              <input type="number" id="mathMarks" class="form-control" value="98" min="0" max="100" step="0.5">
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">
+                <span>Physics Marks (÷ 2)</span>
+                <span style="font-family: var(--font-mono); color: var(--primary);">Max 100</span>
+              </div>
+              <input type="number" id="physicsMarks" class="form-control" value="94" min="0" max="100" step="0.5">
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">
+                <span>Chemistry Marks (÷ 2)</span>
+                <span style="font-family: var(--font-mono); color: var(--primary);">Max 100</span>
+              </div>
+              <input type="number" id="chemistryMarks" class="form-control" value="92" min="0" max="100" step="0.5">
+            </div>
+          </div>
+
+          <!-- Reservation & Quota Filters -->
+          <div class="form-group">
+            <label class="form-label">Community Reservation Quota</label>
+            <select id="communitySelect" class="form-control">
+              <option value="OC">Open Competition (OC)</option>
+              <option value="BC">Backward Class (BC)</option>
+              <option value="BCM">Backward Class Muslim (BCM)</option>
+              <option value="MBC">Most Backward Class (MBC / DNC)</option>
+              <option value="SC">Scheduled Caste (SC)</option>
+              <option value="SCA">Scheduled Caste Arunthathiyar (SCA)</option>
+              <option value="ST">Scheduled Tribe (ST)</option>
+            </select>
+          </div>
+
+          <!-- 7.5% Government School Quota Toggle -->
+          <div class="toggle-wrapper">
+            <div class="toggle-info">
+              <span class="toggle-title">7.5% Government School Quota</span>
+              <span class="toggle-desc">Tamil Nadu preferential seat reservation</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="govtQuotaToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Special Sub-Quotas -->
+          <div class="form-group">
+            <label class="form-label">Special Sub-Category Quota</label>
+            <select id="specialQuotaSelect" class="form-control">
+              <option value="NONE">General Seat Matrix</option>
+              <option value="SPORTS">Eminent Sports Persons Quota</option>
+              <option value="EX_SERVICEMEN">Ex-Servicemen Quota</option>
+            </select>
+          </div>
+
+          <!-- District Filter -->
+          <div class="form-group">
+            <label class="form-label">Geographic / District Filter</label>
+            <select id="districtSelect" class="form-control">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- Branch Filter -->
+          <div class="form-group">
+            <label class="form-label">Engineering Branch / Stream</label>
+            <select id="branchSelect" class="form-control">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- Risk Tier Filter -->
+          <div class="form-group">
+            <label class="form-label">ML Admission Probability Tier</label>
+            <select id="riskFilterSelect" class="form-control">
+              <option value="ALL">All Risk Tiers (Safe, Target, Reach)</option>
+              <option value="Safe">Safe Choices (>85% Probability)</option>
+              <option value="Target">Target Choices (50% - 85% Probability)</option>
+              <option value="Reach">Reach / Stretch Choices (<50% Probability)</option>
+            </select>
+          </div>
+
+        </aside>
+
+        <!-- Right Content Viewport: Prediction Matches Table -->
+        <main class="glass-panel">
+          <div class="results-header-bar">
+            <div class="results-count" id="resultsCount">
+              Found matches for cutoff <strong>191.00</strong>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="tierFilterSelect" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.82rem;">
+                <option value="ALL">All Institutional Tiers</option>
+                <option value="Tier-1">Tier-1 Premier Colleges</option>
+                <option value="Tier-2">Tier-2 Reputed Colleges</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>College Name & Location</th>
+                  <th>Branch</th>
+                  <th>2025 Cutoff</th>
+                  <th>ML Probability</th>
+                  <th>5-Yr Shift</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </main>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: DOTE CHOICE LIST OPTIMIZER VIEW -->
+    <div id="choicesView" class="tab-view" style="display: none;">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <span class="panel-title"><i class="fas fa-list-ol" style="color: var(--primary);"></i> DoTE Choice List Generator & Strategy Optimizer</span>
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="exportFormatBtn" class="btn-primary btn-sm">
+              <i class="fas fa-file-export"></i> Format for DoTE Portal
+            </button>
+            <button id="downloadCSVBtn" class="btn-secondary btn-sm">
+              <i class="fas fa-download"></i> Export CSV
+            </button>
+            <button id="clearChoicesBtn" class="btn-secondary btn-sm" style="color: #f43f5e;">
+              <i class="fas fa-trash"></i> Clear All
+            </button>
+          </div>
+        </div>
+
+        <div id="choiceWarningsContainer"></div>
+
+        <div id="choiceListContainer">
+          <!-- Choice Cards rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STATE RANK MATRIX VIEW -->
+    <div id="ranksView" class="tab-view" style="display: none;">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <span class="panel-title"><i class="fas fa-chart-bar" style="color: var(--primary);"></i> TNEA Cutoff vs. Overall State Rank Reference Matrix</span>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Empirical distribution table mapping Class 12 aggregate cutoff scores out of 200.00 to official DoTE overall state ranks based on historical mark density curves.
+        </p>
+
+        <div class="table-responsive">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>TNEA Cutoff Range</th>
+                <th>Estimated State Rank Range</th>
+                <th>Competition Density</th>
+                <th>Typical Allotment Spectrum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color: #38bdf8;">199.50 – 200.00</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 1 – 50</span></td>
+                <td><span class="risk-pill risk-safe">Top 0.02%</span></td>
+                <td>CEG Guindy CSE/ECE, PSG Tech CSE</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">198.00 – 199.49</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 51 – 500</span></td>
+                <td><span class="risk-pill risk-safe">Top 0.25%</span></td>
+                <td>CEG, MIT Chromepet, PSG Tech, SSN Top Branches</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">195.00 – 197.99</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 501 – 3,500</span></td>
+                <td><span class="risk-pill risk-safe">Top 1.75%</span></td>
+                <td>CIT Coimbatore, GCT, TCE Madurai, KCT, SVCE</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">190.00 – 194.99</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 3,501 – 13,500</span></td>
+                <td><span class="risk-pill risk-target">Top 6.75%</span></td>
+                <td>SKCET, RMK, REC Thandalam, BIT Sathyamangalam, Kongu</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">180.00 – 189.99</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 13,501 – 45,500</span></td>
+                <td><span class="risk-pill risk-target">Top 22.5%</span></td>
+                <td>Govt Colleges (Salem, Bargur, Tirunelveli), PSNA, Velammal</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">160.00 – 179.99</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 45,501 – 115,500</span></td>
+                <td><span class="risk-pill risk-reach">Moderate Density</span></td>
+                <td>Regional University Colleges, Reputed Self-Financing Colleges</td>
+              </tr>
+              <tr>
+                <td><strong style="color: #38bdf8;">110.00 – 159.99</strong></td>
+                <td><span style="font-family: var(--font-mono); font-weight: 700;">Rank 115,501 – 165,500</span></td>
+                <td><span class="risk-pill risk-reach">High Density</span></td>
+                <td>Affiliated Self-Financing Engineering Institutions</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Static Compliance & Disclaimer Notice -->
+    <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+      <p style="margin-bottom: 0.5rem;">
+        <i class="fas fa-shield-alt"></i> <strong>Official Compliance Notice:</strong> Generated lists and Machine Learning probability predictions are estimations derived strictly from past DoTE allotment matrices (2021–2025). This tool operates independently and does not guarantee official allotment seats from the Directorate of Technical Education (DoTE), Tamil Nadu.
+      </p>
+      <p>&copy; 2026 TNEA Admission Intelligence Platform. Built for Tamil Nadu Engineering Candidates.</p>
+    </footer>
+
+  </div>
+
+  <!-- MODAL 1: 5-YEAR TREND CHART MODAL -->
+  <div id="trendModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-title" id="modalCollegeTitle">5-Year Historical Cutoff Trend</span>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="chart-wrapper">
+          <canvas id="trendChartCanvas"></canvas>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; background: rgba(9, 13, 22, 0.6); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">5-Yr Avg Cutoff</div>
+            <div id="modalAvgCutoff" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #818cf8;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Peak Cutoff</div>
+            <div id="modalMaxCutoff" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #38bdf8;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">5-Yr Score Shift</div>
+            <div id="modalShift5Yr" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: #f43f5e;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Demand Trajectory</div>
+            <div id="modalTrajectory" style="font-size: 0.85rem; font-weight: 700; color: #10b981;">Stable</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SMART BRANCH SWAP RECOMMENDATIONS MODAL -->
+  <div id="swapModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-title" id="swapModalTitle">Smart Branch Swap Recommendations</span>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem;">
+          If your cutoff falls short of your primary branch choice, our engine dynamically evaluates alternate engineering streams at the exact same campus with higher admission probability.
+        </p>
+        <div id="swapResultsContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: OFFICIAL DOTE PORTAL EXPORT MODAL -->
+  <div id="exportModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-title">Official DoTE Portal Option Entry Form</span>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">
+          Copy and paste this formatted text matrix directly when filling your official option entry form on the official DoTE website (<strong>tneaonline.org</strong>).
+        </p>
+        <textarea id="exportTextarea" class="form-control" style="height: 280px; font-family: var(--font-mono); font-size: 0.82rem; white-space: pre;" readonly></textarea>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button id="copyDoTEBtn" class="btn-primary" style="width: auto;">
+            <i class="fas fa-copy"></i> Copy to Clipboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Scripts -->
+  <script src="./js/data.js"></script>
+  <script src="./js/mlEngine.js"></script>
+  <script src="./js/recommendationEngine.js"></script>
+  <script src="./js/choiceOptimizer.js"></script>
+  <script src="./js/charts.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
